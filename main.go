@@ -1,7 +1,36 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"io"
+	"log"
+	"os"
+)
+
+const inputFilePath = "messages.txt"
 
 func main() {
-  fmt.Println("I hope I get the job!")
+	f, err := os.Open(inputFilePath)
+	if err != nil {
+		log.Fatalf("could not open %s: %s\n", inputFilePath, err)
+	}
+	defer f.Close()
+
+	fmt.Printf("Reading data from %s\n", inputFilePath)
+	fmt.Println("===================================")
+
+	for {
+		data := make([]byte, 8)
+		n, err := f.Read(data)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			fmt.Printf("error: %s\n", err.Error())
+			break
+		}
+		str := string(data[:n])
+		fmt.Printf("read: %s\n", str)
+	}
 }
