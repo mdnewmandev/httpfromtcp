@@ -2,7 +2,6 @@ package response
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/mdnewmandev/httpfromtcp/internal/headers"
 )
@@ -15,26 +14,17 @@ const (
 	StatusCode500 StatusCode = 500
 )
 
-func WriteStatusLine(w io.Writer, statusCode StatusCode) error {
-	var statusText string
+func getStatusLine(statusCode StatusCode) []byte {
+	reasonPhrase := ""
 	switch statusCode {
 	case StatusCode200:
-		statusText = "OK"
+		reasonPhrase = "OK"
 	case StatusCode400:
-		statusText = "Bad Request"
+		reasonPhrase = "Bad Request"
 	case StatusCode500:
-		statusText = "Internal Server Error"
-	default:
-		statusText = ""
+		reasonPhrase = "Internal Server Error"
 	}
-
-	statusLine := fmt.Sprintf("HTTP/1.1 %d %s\r\n", statusCode, statusText)
-	_, err := w.Write([]byte(statusLine))
-	if err != nil {
-		return err
-	}
-	
-	return nil
+	return []byte(fmt.Sprintf("HTTP/1.1 %d %s\r\n", statusCode, reasonPhrase))
 }
 
 func GetDefaultHeaders(contentLen int) headers.Headers {
@@ -44,19 +34,4 @@ func GetDefaultHeaders(contentLen int) headers.Headers {
 	h.Set("Content-Type", "text/plain")
 
 	return h
-}
-
-func WriteHeaders(w io.Writer, headers headers.Headers) error {
-	for key, value := range headers {
-		headerLine := fmt.Sprintf("%s: %s\r\n", key, value)
-		_, err := w.Write([]byte(headerLine))
-		if err != nil {
-			return err
-		}
-	}
-	_, err := w.Write([]byte("\r\n"))
-	if err != nil {
-		return err
-	}
-	return nil
 }
